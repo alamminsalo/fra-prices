@@ -6,4 +6,4 @@
 - DuckDB (spatial, h3 extensions)
 - PMTiles
 
-[Live page](https://alamminsalo/github.io/fra-prices/)
+[Live page](https://alamminsalo.github.io/fra-prices/)
