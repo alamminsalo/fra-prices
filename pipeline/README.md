@@ -1,5 +1,9 @@
 # Input Datasets
 
+Prices are aggregated using H3 cells.
+
+Currently there is no weighting implemented, prices are median historical values based on proximity.
+
 ### Price data
 https://www.data.gouv.fr/datasets/demandes-de-valeurs-foncieres
 

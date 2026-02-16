@@ -4,6 +4,6 @@
 
 - Maplibre UI
 - DuckDB (spatial, h3 extensions)
-- PMTiles
+- PMTiles (served via huggingface)
 
 [Live page](https://alamminsalo.github.io/fra-prices/)
