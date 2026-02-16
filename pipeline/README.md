@@ -4,6 +4,8 @@ Prices are aggregated using H3 cells.
 
 Currently there is no weighting implemented, prices are median historical values based on proximity.
 
+Unfortunately, I was having out-of-memory issues with the parcel level aggregation, and as a workaround used sections instead.
+
 ### Price data
 https://www.data.gouv.fr/datasets/demandes-de-valeurs-foncieres
 
