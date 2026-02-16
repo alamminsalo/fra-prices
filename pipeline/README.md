@@ -1,28 +1,18 @@
 # Input Datasets
 
-DVF / price data
+### Price data
 https://www.data.gouv.fr/datasets/demandes-de-valeurs-foncieres
 
-Cadastre parcelles (DVF spatial linkage)
-https://cadastre.data.gouv.fr/data/etalab-cadastre/2025-12-01/geoparquet/france/
+### Country, Region, Department
 
-INSEE Filosofi IRIS (income statistics)
-
-BDNB (building data)
-
-## Area Polygons
-
-Country, Region, Department
 - https://simplemaps.com
-- https://public.opendatasoft.com/explore/assets/georef-france-region-millesime/export
-- https://public.opendatasoft.com/explore/assets/georef-france-departement-millesime/export/
+- https://www.data.gouv.fr/datasets/contours-administratifs
 
-Communes, Parcels 
-- cadastre
+### Communes, Parcels 
+- https://www.data.gouv.fr/datasets/parcelles-cadastrales-1
 
-Postcodes
+### Postcodes
 - https://r.iresmi.net/posts/2024/codes_postaux/
-
 
 # Running
 
