@@ -1,3 +1,5 @@
+load spatial;
+
 CREATE
 OR REPLACE TABLE parcel AS
 SELECT
@@ -9,7 +11,7 @@ SELECT
     contenance AS land_area_sqm,
     -- convert geometry to 4326
     st_transform(
-        geometry,
+        st_simplifypreservetopology(geometry, 1),
         'EPSG:2154',
         'EPSG:4326',
         always_xy := TRUE
@@ -19,5 +21,3 @@ FROM
 WHERE
     type_objet = 'parcelles'
     AND geom_srid = 2154;
-
-CREATE INDEX parcel_rtree ON parcel USING rtree(geom);

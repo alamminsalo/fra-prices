@@ -1,4 +1,4 @@
--- Input datasets: cadastre geoparquet, valeus foncieres parquet (combined csv files)
+-- Input datasets: valeus foncieres parquet (combined csv files)
 CREATE
 OR REPLACE MACRO fmt_number (x) AS regexp_replace (x::text, '[^0-9,]', '').replace (',', '.');
 

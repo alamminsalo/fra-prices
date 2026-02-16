@@ -14,10 +14,17 @@ BDNB (building data)
 
 Country, Region, Department
 - https://simplemaps.com
+- https://public.opendatasoft.com/explore/assets/georef-france-region-millesime/export
+- https://public.opendatasoft.com/explore/assets/georef-france-departement-millesime/export/
 
 Communes, Parcels 
 - cadastre
 
 Postcodes
 - https://r.iresmi.net/posts/2024/codes_postaux/
+
+
+# Running
+
+See 'package_mbtiles.sh'
 
