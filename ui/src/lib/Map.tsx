@@ -14,7 +14,7 @@ export default function Map() {
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: "/style.json",
+      style: import.meta.env.VITE_STYLE_URL,
       center: [2.35, 47],
       zoom: 5,
     });
