@@ -1,0 +1,87 @@
+{
+  "version": 8,
+  "sources": {
+    "raster-tiles": {
+      "type": "raster",
+      "tiles": [
+        "https://a.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png",
+        "https://b.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png",
+        "https://c.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png"
+      ],
+      "tileSize": 256,
+      "attribution": "&copy; OpenStreetMap &copy; CARTO"
+    },
+    "price-data": {
+      "type": "vector",
+      "url": "pmtiles:///fra-prices/prices.pmtiles"
+    }
+  },
+  "layers": [
+    {
+      "id": "background-layer",
+      "type": "raster",
+      "source": "raster-tiles"
+    },
+    {
+      "id": "price-fill",
+      "type": "fill",
+      "source": "price-data",
+      "source-layer": "prices",
+      "paint": {
+        "fill-color": [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "coalesce",
+            [
+              "get",
+              "price_estimate"
+            ],
+            0
+          ],
+          0,
+          "rgba(0,0,0,0)",
+          1000,
+          "#228B22",
+          4500,
+          "#FFFF00",
+          8000,
+          "#FF0000"
+        ],
+        "fill-opacity": 0.7
+      }
+    },
+    {
+      "id": "price-outline",
+      "type": "line",
+      "source": "price-data",
+      "source-layer": "prices",
+      "paint": {
+        "line-color": "#ffffff",
+        "line-width": 1,
+        "line-opacity": 0.2
+      }
+    },
+    {
+      "id": "price-highlight",
+      "type": "line",
+      "source": "price-data",
+      "source-layer": "prices",
+      "paint": {
+        "line-color": "#ffffff",
+        "line-width": 4,
+        "line-opacity": 1
+      },
+      "filter": [
+        "==",
+        [
+          "get",
+          "id"
+        ],
+        ""
+      ]
+    }
+  ]
+}
