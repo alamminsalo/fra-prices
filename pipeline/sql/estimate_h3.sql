@@ -62,9 +62,9 @@ FROM
 GROUP BY
     ALL;
 
--- Calculates value for given geometry and aggregation level
+-- Returns propagated cells and their values for given geometry
 CREATE
-OR REPLACE FUNCTION geom_value_agg(query_geom, query_res) AS (
+OR REPLACE FUNCTION geom_cell_values(query_geom, query_res) AS TABLE (
     -- Collect unique h3 cells intersecting the query geometry
     WITH query_cells AS (
         -- Normalize to polygons
@@ -88,6 +88,7 @@ OR REPLACE FUNCTION geom_value_agg(query_geom, query_res) AS (
             AND st_area_spheroid(poly) > 1
     ),
     -- Recursively find non-null value by traversing bottom-up the cell hierarchy.
+    -- Make sure the cell is the parent key in the recursive part because otherwise cells leading to same parent will be duplicated.
     cell_agg AS (
         WITH recursive _cells USING KEY(cell) AS (
             -- Initial state
@@ -109,11 +110,11 @@ OR REPLACE FUNCTION geom_value_agg(query_geom, query_res) AS (
                 -- Recursive ascension to parent
             UNION
             SELECT
-                c.cell,
+                p.cell,
                 p.price_m2,
                 p.tx_count,
-                c.res - 1 AS res,
-                h3_cell_to_parent(c.cell, c.res - 1),
+                c.res - 1,
+                h3_cell_to_parent(p.cell, c.res -1),
                 c.poly,
                 st_intersection(
                     poly,
@@ -121,7 +122,7 @@ OR REPLACE FUNCTION geom_value_agg(query_geom, query_res) AS (
                 ).st_area_spheroid() / h3_cell_area(p.cell, 'm^2'),
             FROM
                 _cells c
-                LEFT JOIN cell_values p ON (c.parent_cell = p.cell)
+                LEFT JOIN cell_values p ON (parent_cell = p.cell)
             WHERE
                 -- Stops when reaching resolution 2 OR price is found on parent cell.
                 res >= 2
@@ -130,12 +131,20 @@ OR REPLACE FUNCTION geom_value_agg(query_geom, query_res) AS (
         FROM
             _cells
         WHERE
-            NOT isnan(w_isect)
+            price_m2 IS NOT NULL
+            AND NOT isnan(w_isect)
             AND w_isect > 0
     )
-    -- Use weighted geometric mean.
-    -- Weight is number of transactions multiplied with the overlapping fractional area of the cell.
-    -- This way we attempt to normalize the parent-children influence.
+    FROM
+        cell_agg
+);
+
+-- Calculates value for given geometry and aggregation level:
+-- Uses weighted geometric mean.
+-- Weight is number of transactions multiplied with the overlapping fractional area of the cell.
+-- This way we attempt to normalize the parent-children influence.
+CREATE
+OR REPLACE FUNCTION geom_value_agg(query_geom, query_res) AS (
     SELECT
         exp(
             weighted_avg(
@@ -144,7 +153,7 @@ OR REPLACE FUNCTION geom_value_agg(query_geom, query_res) AS (
             )
         )
     FROM
-        cell_agg
+        geom_cell_values(query_geom, query_res)
 );
 
 .print "Creating area aggregates...";
