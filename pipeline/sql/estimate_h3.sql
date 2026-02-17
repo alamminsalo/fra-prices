@@ -102,7 +102,7 @@ OR REPLACE FUNCTION geom_value_agg(query_geom, query_res) AS (
                     poly,
                     -- The function has a misleading name -> it returns polygon, not the boundary linestring
                     h3_cell_to_boundary_wkt(cell)::geometry
-                ).st_area_spheroid() AS isect_area,
+                ).st_area_spheroid() / h3_cell_area(cell, 'm^2') AS w_isect,
             FROM
                 query_cells
                 LEFT JOIN cell_values USING (cell)
@@ -118,7 +118,7 @@ OR REPLACE FUNCTION geom_value_agg(query_geom, query_res) AS (
                 st_intersection(
                     poly,
                     h3_cell_to_boundary_wkt(p.cell)::geometry
-                ).st_area_spheroid(),
+                ).st_area_spheroid() / h3_cell_area(p.cell, 'm^2'),
             FROM
                 _cells c
                 LEFT JOIN cell_values p ON (c.parent_cell = p.cell)
@@ -127,27 +127,20 @@ OR REPLACE FUNCTION geom_value_agg(query_geom, query_res) AS (
                 res >= 2
                 AND c.price_m2 IS NULL
         )
-        SELECT
-            *,
-            -- Normalized area share
-            isect_area / st_area_spheroid(poly) AS w_area,
-            -- Inverse cell size weight
-            1 / h3_cell_area(cell, 'm^2') AS w_res,
         FROM
             _cells
         WHERE
-            NOT isnan(w_area)
-            AND w_area > 0
+            NOT isnan(w_isect)
+            AND w_isect > 0
     )
-    -- Use weighted avg by squashed sample count between each cell found.
-    -- Apply higher importance on higher-resolution cells.
-    -- Also apply weight on intersected polygon area.
-    -- Apply weighted geometric mean.
+    -- Use weighted geometric mean.
+    -- Weight is number of transactions multiplied with the overlapping fractional area of the cell.
+    -- This way we attempt to normalize the parent-children influence.
     SELECT
         exp(
             weighted_avg(
                 ln(price_m2),
-                sqrt(tx_count) * w_area * w_res
+                sqrt(tx_count) * w_isect
             )
         )
     FROM
