@@ -30,13 +30,13 @@ OR REPLACE TABLE transactions AS WITH valeurs AS (
         TRUE
         AND "Nature mutation" = 'Vente'
         AND transaction_date IS NOT NULL
-        AND price_eur BETWEEN 1000 AND 1000000000
-        AND property_type IS NOT NULL
-        AND main_rooms IS NOT NULL
         AND departement IS NOT NULL
         AND commune IS NOT NULL
         AND postcode IS NOT NULL
-        AND price_m2 IS NOT NULL
+        AND price_eur BETWEEN 10000 AND 10000000
+        AND price_m2 BETWEEN 100 AND 50000
+        AND property_type IN ('Maison', 'Appartement')
+        AND main_rooms BETWEEN 1 AND 10
 )
 SELECT
     transaction_id,
@@ -50,3 +50,8 @@ SELECT
     property_type,
 FROM
     valeurs;
+
+SELECT
+    count()
+FROM
+    transactions;
