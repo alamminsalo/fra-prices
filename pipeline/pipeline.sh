@@ -17,7 +17,7 @@ tippecanoe -o prices.mbtiles \
   --base-zoom=1 \
   --maximum-zoom=14 \
   --force \
-  -L'{"file":"data/areas/country.fgb", "minimum_zoom":3, "maximum_zoom":4}' \
+  -L'{"file":"data/areas/country.fgb", "minimum_zoom":1, "maximum_zoom":4}' \
   -L'{"file":"data/areas/region.fgb", "minimum_zoom":5, "maximum_zoom":6}' \
   -L'{"file":"data/areas/department.fgb", "minimum_zoom":7, "maximum_zoom":8}' \
   -L'{"file":"data/areas/commune.fgb", "minimum_zoom":9, "maximum_zoom":10}' \
