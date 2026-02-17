@@ -25,7 +25,9 @@ SELECT
     'name': coalesce(name, ''),
     'price_estimate': price_estimate::int }::json AS properties,
 FROM
-    st_read(src);
+    st_read(src)
+WHERE
+    NOT isnan(price_estimate);
 
 copy (
     FROM
