@@ -23,4 +23,4 @@
 
 ## Pipeline
 
-See [./pipeline]
+See (./pipeline)
