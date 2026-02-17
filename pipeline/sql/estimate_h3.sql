@@ -6,51 +6,56 @@ SET
     preserve_insertion_order = false;
 
 -- Precalculated sparse cell value aggregates.
--- Recursively calculates (bottom-up) cell values using median of child cell (median) prices.
--- Stops at cell resolution 2.
--- Granularity can be increased by increasing the index resolution.
 CREATE
-OR REPLACE TABLE cell_values AS WITH recursive cell_agg USING KEY (cell) AS (
-    -- Index linking transactions to h3 cells
-    WITH tx_cell_index AS (
-        SELECT
-            transaction_id,
-            ref: st_pointonsurface(geom),
-            cell: h3_latlng_to_cell(
-                ref.st_y(),
-                ref.st_x(),
-                8
-            )
-        FROM
-            transactions t
-            JOIN parcel p USING (parcel_id)
-    )
+OR REPLACE TABLE cell_values AS
+-- Select transactions in all cells
+WITH base AS (
     SELECT
-        cell,
-        median(price_m2) AS price_m2,
-        h3_get_resolution(cell) AS resolution
+        r.unnest::int AS res,
+        h3_latlng_to_cell(
+            st_pointonsurface(geom).st_y(),
+            st_pointonsurface(geom).st_x(),
+            res
+        ) AS cell,
+        price_m2,
+        transaction_date
     FROM
-        tx_cell_index
-        JOIN transactions t USING (transaction_id)
-    GROUP BY
-        ALL
-    UNION
+        transactions t
+        JOIN parcel p USING (parcel_id)
+        CROSS JOIN unnest(generate_series(2, 8)) AS r
+),
+bounds AS (
     SELECT
-        h3_cell_to_parent(cell, resolution - 1),
-        median(price_m2),
-        resolution - 1,
+        quantile_cont(price_m2, 0.05) AS p5,
+        quantile_cont(price_m2, 0.95) AS p95
     FROM
-        cell_agg
-    WHERE
-        resolution > 1
-    GROUP BY
-        ALL
+        base
+),
+-- Filter outliers and compute weights
+filtered AS (
+    SELECT
+        b.cell,
+        b.price_m2,
+        -- Exponential date decay
+        exp(
+            -0.0009 * date_diff('day', transaction_date, current_date)
+        ) AS w,
+    FROM
+        base b
+        SEMI JOIN bounds bb ON (
+            b.price_m2 BETWEEN bb.p5 AND bb.p95
+        )
+    ORDER BY
+        transaction_date DESC
 )
+-- Take weighted average of cell price
 SELECT
     cell,
-    price_m2
+    weighted_avg(price_m2, 2) AS price_m2,
 FROM
-    cell_agg;
+    filtered
+GROUP BY
+    ALL;
 
 -- Calculates value for given geometry and aggregation level
 CREATE
