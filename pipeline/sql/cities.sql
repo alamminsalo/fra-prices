@@ -23,23 +23,7 @@ OR REPLACE TABLE cities AS WITH country_bbox AS (
 SELECT
     NAMES.primary AS name,
     population,
-    geom: st_transform(
-        places.geometry,
-        'EPSG:4326',
-        'EPSG:3857',
-        always_xy := TRUE
-    ).st_buffer(2500).st_transform('EPSG:3857', 'EPSG:4326', always_xy := TRUE),
-    price_all: geom_value_agg(geom, 7),
-    price_house: geom_value_agg(
-        geom,
-        7,
-        query_property_type := 'Maison'
-    ),
-    price_apartment: geom_value_agg(
-        geom,
-        7,
-        query_property_type := 'Appartement'
-    ),
+    geom: st_transform(places.geometry, 'EPSG:4326', 'EPSG:2154').st_buffer(5000).st_transform('EPSG:2154', 'EPSG:4326'),
 FROM
     read_parquet(
         's3://overturemaps-us-west-2/release/2026-01-21.0/theme=divisions/type=division/*',
@@ -61,12 +45,21 @@ ORDER BY
 LIMIT
     10;
 
-FROM
-    cities;
-
-COPY (
+copy (
     SELECT
-        * exclude (geom)
+        name,
+        population,
+        price_all: median(price_m2),
+        price_maison: median(price_m2) filter (property_type = 'Maison'),
+        price_appartement: median(price_m2) filter (property_type = 'Appartement'),
     FROM
-        cities
-) TO 'cities.csv';
+        transactions t
+        JOIN parcel p USING (parcel_id)
+        JOIN cities c ON st_contains(c.geom, p.geom)
+    WHERE
+        date_diff('day', transaction_date, current_date) < 365
+    GROUP BY
+        ALL
+    ORDER BY
+        population DESC
+) TO 'cities.md';
