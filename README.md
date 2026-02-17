@@ -20,3 +20,7 @@
 - Maplibre UI
 - DuckDB (spatial, h3 extensions)
 - PMTiles (served via huggingface)
+
+## Pipeline
+
+See [./pipeline]
