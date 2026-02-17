@@ -1,18 +1,16 @@
-# Input Datasets
+# Pipeline to build dataset
 
-### Price data
-https://www.data.gouv.fr/datasets/demandes-de-valeurs-foncieres
+## Setup
 
-### Country, Region, Department
+Needed CLI tools:
+- duckdb
+    - Install extensions spatial, httpfs, h3 (community)
+- pmtiles
+- tippecanoe
 
-- https://simplemaps.com
-- https://www.data.gouv.fr/datasets/contours-administratifs
+# Running
 
-### Communes, Parcels 
-- https://www.data.gouv.fr/datasets/parcelles-cadastrales-1
-
-### Postcodes
-- https://r.iresmi.net/posts/2024/codes_postaux/
+To build the pmtiles output, simply run './pipeline.sh'
 
 # Price aggregation logic
 
@@ -26,8 +24,3 @@ https://www.data.gouv.fr/datasets/demandes-de-valeurs-foncieres
     - Calculate weighted geometric mean, where weight is the cell area intersection: `W = (cellGeom & inputGeom) / cellGeom`
     - Parent cells get naturally less weight as their proportional intersecting area is smaller.
 4. Run the geom_agg calculation for each geometry in the area dataset.
-
-# Running
-
-See 'package_mbtiles.sh'
-

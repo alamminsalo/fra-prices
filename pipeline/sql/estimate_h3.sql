@@ -67,11 +67,7 @@ GROUP BY
 
 -- Returns propagated cells and their values for given geometry
 CREATE
-OR REPLACE FUNCTION geom_cell_values(
-    query_geom,
-    query_res,
-    query_property_type := NULL
-) AS TABLE (
+OR REPLACE FUNCTION geom_cell_values(query_geom, query_res,) AS TABLE (
     -- Collect unique h3 cells intersecting the query geometry
     WITH query_cells AS (
         -- Normalize to polygons
@@ -114,9 +110,6 @@ OR REPLACE FUNCTION geom_cell_values(
             FROM
                 query_cells
                 LEFT JOIN cell_values USING (cell)
-            WHERE
-                query_property_type IS NULL
-                OR (property_type = query_property_type)
                 -- Recursive ascension to parent
             UNION
             SELECT
@@ -154,11 +147,7 @@ OR REPLACE FUNCTION geom_cell_values(
 -- Weight is number of transactions multiplied with the overlapping fractional area of the cell.
 -- This way we attempt to normalize the parent-children influence.
 CREATE
-OR REPLACE FUNCTION geom_value_agg(
-    query_geom,
-    query_res,
-    query_property_type := NULL
-) AS (
+OR REPLACE FUNCTION geom_value_agg(query_geom, query_res,) AS (
     SELECT
         exp(
             weighted_avg(
@@ -170,159 +159,80 @@ OR REPLACE FUNCTION geom_value_agg(
         geom_cell_values(
             query_geom,
             query_res,
-            query_property_type := query_property_type
         )
 );
 
--- .print "Creating area aggregates...";
---
--- .print "Country...";
---
--- copy (
---     SELECT
---         id,
---         name,
---         geom_value_agg(geom, 3) AS price_estimate,
---         geom
---     FROM
---         country
--- ) TO 'data/areas/country.fgb' (format gdal, driver FlatGeobuf, srs 'EPSG:4326');
---
--- .print "Region...";
---
--- copy (
---     SELECT
---         id,
---         name,
---         geom_value_agg(geom, 4) AS price_estimate,
---         geom
---     FROM
---         region
--- ) TO 'data/areas/region.fgb' (format gdal, driver FlatGeobuf, srs 'EPSG:4326');
---
--- .print "Department...";
---
--- copy (
---     SELECT
---         id,
---         name,
---         geom_value_agg(geom, 5) AS price_estimate,
---         geom
---     FROM
---         department
--- ) TO 'data/areas/department.fgb' (format gdal, driver FlatGeobuf, srs 'EPSG:4326');
---
--- .print "Commune...";
---
--- copy (
---     SELECT
---         id,
---         nom AS name,
---         geom_value_agg(geom, 6) AS price_estimate,
---         geom
---     FROM
---         commune
--- ) TO 'data/areas/commune.fgb' (format gdal, driver FlatGeobuf, srs 'EPSG:4326');
---
--- .print "Postcode...";
---
--- copy (
---     SELECT
---         code_postal AS id,
---         nom_de_la_commune AS name,
---         geom_value_agg(geom, 6) AS price_estimate,
---         geom
---     FROM
---         postcode
--- ) TO 'data/areas/postcode.fgb' (format gdal, driver FlatGeobuf, srs 'EPSG:4326');
---
--- -- Need to do sections in multiple runs because my workstation is running out of memory.
--- -- Lets use regions to help us splitting the inserts.
--- .print "Section...";
---
--- CREATE temp TABLE section_prices AS
--- SELECT
---     s.id,
---     s.nom AS name,
---     geom_value_agg(s.geom, 7) AS price_estimate,
---     s.geom
--- FROM
---     section s
---     JOIN postcode p ON (st_within(st_pointonsurface(s.geom), p.geom))
---     SEMI JOIN region r ON (
---         st_within(st_pointonsurface(s.geom), r.geom)
---         AND r.id::int IN (11, 24)
---     );
---
--- INSERT INTO
---     section_prices
--- SELECT
---     s.id,
---     s.nom AS name,
---     geom_value_agg(s.geom, 7) AS price_estimate,
---     s.geom
--- FROM
---     section s
---     JOIN postcode p ON (st_within(st_pointonsurface(s.geom), p.geom))
---     SEMI JOIN region r ON (
---         st_within(st_pointonsurface(s.geom), r.geom)
---         AND r.id::int IN (27, 28)
---     );
---
--- INSERT INTO
---     section_prices
--- SELECT
---     id,
---     nom AS name,
---     geom_value_agg(geom, 7) AS price_estimate,
---     geom
--- FROM
---     section s
---     SEMI JOIN region r ON (
---         st_within(st_pointonsurface(s.geom), r.geom)
---         AND r.id::int IN (32, 44)
---     );
---
--- INSERT INTO
---     section_prices
--- SELECT
---     id,
---     nom AS name,
---     geom_value_agg(geom, 7) AS price_estimate,
---     geom
--- FROM
---     section s
---     SEMI JOIN region r ON (
---         st_within(st_pointonsurface(s.geom), r.geom)
---         AND r.id::int IN (52, 53)
---     );
---
--- INSERT INTO
---     section_prices
--- SELECT
---     id,
---     nom AS name,
---     geom_value_agg(geom, 7) AS price_estimate,
---     geom
--- FROM
---     section s
---     SEMI JOIN region r ON (
---         st_within(st_pointonsurface(s.geom), r.geom)
---         AND r.id::int IN (75, 76)
---     );
---
--- INSERT INTO
---     section_prices
--- SELECT
---     id,
---     nom AS name,
---     geom_value_agg(geom, 7) AS price_estimate,
---     geom
--- FROM
---     section s
---     SEMI JOIN region r ON (
---         st_within(st_pointonsurface(s.geom), r.geom)
---         AND r.id::int IN (84, 93, 94)
---     );
---
--- COPY section_prices TO 'data/areas/section.fgb' (format gdal, driver FlatGeobuf, srs 'EPSG:4326');
+.print "Creating area aggregates...";
+
+.print "Country...";
+
+copy (
+    SELECT
+        id,
+        name,
+        geom_value_agg(geom, 3) AS price_estimate,
+        geom
+    FROM
+        country
+) TO 'data/areas/country.fgb' (format gdal, driver FlatGeobuf, srs 'EPSG:4326');
+
+.print "Region...";
+
+copy (
+    SELECT
+        id,
+        name,
+        geom_value_agg(geom, 4) AS price_estimate,
+        geom
+    FROM
+        region
+) TO 'data/areas/region.fgb' (format gdal, driver FlatGeobuf, srs 'EPSG:4326');
+
+.print "Department...";
+
+copy (
+    SELECT
+        id,
+        name,
+        geom_value_agg(geom, 5) AS price_estimate,
+        geom
+    FROM
+        department
+) TO 'data/areas/department.fgb' (format gdal, driver FlatGeobuf, srs 'EPSG:4326');
+
+.print "Commune...";
+
+copy (
+    SELECT
+        id,
+        nom AS name,
+        geom_value_agg(geom, 6) AS price_estimate,
+        geom
+    FROM
+        commune
+) TO 'data/areas/commune.fgb' (format gdal, driver FlatGeobuf, srs 'EPSG:4326');
+
+.print "Postcode...";
+
+copy (
+    SELECT
+        code_postal AS id,
+        nom_de_la_commune AS name,
+        geom_value_agg(geom, 6) AS price_estimate,
+        geom
+    FROM
+        postcode
+) TO 'data/areas/postcode.fgb' (format gdal, driver FlatGeobuf, srs 'EPSG:4326');
+
+.print "Section...";
+
+CREATE temp TABLE section_prices AS
+SELECT
+    s.id,
+    s.nom AS name,
+    geom_value_agg(s.geom, 7) AS price_estimate,
+    s.geom
+FROM
+    section s;
+
+COPY section_prices TO 'data/areas/section.fgb' (format gdal, driver FlatGeobuf, srs 'EPSG:4326');

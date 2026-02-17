@@ -2,6 +2,16 @@
 CREATE
 OR REPLACE MACRO fmt_number (x) AS regexp_replace (x::text, '[^0-9,]', '').replace (',', '.');
 
+-- Initial csv import table
+CREATE temp TABLE valeurs AS
+FROM
+    read_csv(
+        'data/Valeurs*.txt',
+        union_by_name = TRUE,
+        files_to_sniff =- 1,
+        sample_size =- 1
+    );
+
 CREATE
 OR REPLACE TABLE transactions AS WITH valeurs AS (
     SELECT

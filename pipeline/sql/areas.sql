@@ -54,7 +54,7 @@ WHERE
 CREATE
 OR REPLACE TABLE postcode AS
 FROM
-    'data/postcodes.parquet' p
+    'data/codes_postaux_fr_2025_v2.gpkg'
     SEMI JOIN department d ON (st_intersects(d.geom, p.geom))
 WHERE
     NOT st_isempty(geom);

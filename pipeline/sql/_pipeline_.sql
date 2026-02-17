@@ -1,5 +1,5 @@
 install spatial;
-install h3 from community;
+install h3 FROM community;
 
 .read sql/transactions.sql
 .read sql/parcel.sql
