@@ -45,21 +45,20 @@ ORDER BY
 LIMIT
     10;
 
-copy (
-    SELECT
-        name,
-        population,
-        price_all: median(price_m2),
-        price_maison: median(price_m2) filter (property_type = 'Maison'),
-        price_appartement: median(price_m2) filter (property_type = 'Appartement'),
-    FROM
-        transactions t
-        JOIN parcel p USING (parcel_id)
-        JOIN cities c ON st_contains(c.geom, p.geom)
-    WHERE
-        date_diff('day', transaction_date, current_date) < 365
-    GROUP BY
-        ALL
-    ORDER BY
-        population DESC
-) TO 'cities.md';
+.mode markdown
+SELECT
+    name,
+    population,
+    price_all: median(price_m2),
+    price_maison: median(price_m2) filter (property_type = 'Maison'),
+    price_appartement: median(price_m2) filter (property_type = 'Appartement'),
+FROM
+    transactions t
+    JOIN parcel p USING (parcel_id)
+    JOIN cities c ON st_contains(c.geom, p.geom)
+WHERE
+    date_diff('day', transaction_date, current_date) < 365
+GROUP BY
+    ALL
+ORDER BY
+    population DESC;
