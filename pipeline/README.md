@@ -3,10 +3,11 @@
 ## Setup
 
 Needed CLI tools:
-- duckdb
-    - Install extensions spatial, httpfs, h3 (community)
+- duckdb (spatial, httpfs, h3 community extensions)
 - pmtiles
 - tippecanoe
+- zip
+- curl
 
 # Running
 
