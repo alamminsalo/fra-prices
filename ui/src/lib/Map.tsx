@@ -33,7 +33,6 @@ export default function Map() {
       map.on("mousemove", "price-fill", (e) => {
         if (e.features && e.features.length > 0) {
           const feature = e.features[0];
-          const price = feature.properties.price_estimate;
 
           const featureId = feature.properties.id || "";
 
