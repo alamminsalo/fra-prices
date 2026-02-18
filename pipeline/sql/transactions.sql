@@ -47,6 +47,11 @@ OR REPLACE TABLE transactions AS WITH valeurs AS (
         AND price_m2 BETWEEN 100 AND 50000
         AND property_type IN ('Maison', 'Appartement')
         AND main_rooms BETWEEN 1 AND 10
+        -- Filter multi-lot transactions
+        AND (
+            "1er lot" IS NOT NULL
+            AND "2eme lot" IS NULL
+        )
 )
 SELECT
     transaction_id,

@@ -67,7 +67,7 @@ GROUP BY
 
 -- Returns propagated cells and their values for given geometry
 CREATE
-OR REPLACE FUNCTION geom_cell_values(query_geom, query_res,) AS TABLE (
+OR REPLACE FUNCTION geom_cell_values(query_geom, query_res, ptype) AS TABLE (
     -- Collect unique h3 cells intersecting the query geometry
     WITH query_cells AS (
         -- Normalize to polygons
@@ -110,6 +110,8 @@ OR REPLACE FUNCTION geom_cell_values(query_geom, query_res,) AS TABLE (
             FROM
                 query_cells
                 LEFT JOIN cell_values USING (cell)
+            WHERE
+                property_type = ptype
                 -- Recursive ascension to parent
             UNION
             SELECT
@@ -130,6 +132,7 @@ OR REPLACE FUNCTION geom_cell_values(query_geom, query_res,) AS TABLE (
                 -- Stops when reaching resolution 2 OR price is found on parent cell.
                 res >= 2
                 AND c.price_m2 IS NULL
+                AND property_type = ptype
         )
         FROM
             _cells
@@ -147,7 +150,7 @@ OR REPLACE FUNCTION geom_cell_values(query_geom, query_res,) AS TABLE (
 -- Weight is number of transactions multiplied with the overlapping fractional area of the cell.
 -- This way we attempt to normalize the parent-children influence.
 CREATE
-OR REPLACE FUNCTION geom_value_agg(query_geom, query_res,) AS (
+OR REPLACE FUNCTION geom_value_agg(query_geom, query_res, ptype) AS (
     SELECT
         exp(
             weighted_avg(
@@ -159,6 +162,7 @@ OR REPLACE FUNCTION geom_value_agg(query_geom, query_res,) AS (
         geom_cell_values(
             query_geom,
             query_res,
+            ptype
         )
 );
 
@@ -170,7 +174,8 @@ copy (
     SELECT
         id,
         name,
-        geom_value_agg(geom, 3) AS price_estimate,
+        geom_value_agg(geom, 3, 'Maison') AS price_estimate,
+        geom_value_agg(geom, 3, 'Appartement') AS price_estimate_appartement,
         geom
     FROM
         country
@@ -182,7 +187,8 @@ copy (
     SELECT
         id,
         name,
-        geom_value_agg(geom, 4) AS price_estimate,
+        geom_value_agg(geom, 4, 'Maison') AS price_estimate,
+        geom_value_agg(geom, 4, 'Appartement') AS price_estimate_appartement,
         geom
     FROM
         region
@@ -194,7 +200,8 @@ copy (
     SELECT
         id,
         name,
-        geom_value_agg(geom, 5) AS price_estimate,
+        geom_value_agg(geom, 5, 'Maison') AS price_estimate,
+        geom_value_agg(geom, 5, 'Appartement') AS price_estimate_appartement,
         geom
     FROM
         department
@@ -206,7 +213,8 @@ copy (
     SELECT
         id,
         nom AS name,
-        geom_value_agg(geom, 6) AS price_estimate,
+        geom_value_agg(geom, 6, 'Maison') AS price_estimate,
+        geom_value_agg(geom, 6, 'Appartement') AS price_estimate_appartement,
         geom
     FROM
         commune
@@ -218,7 +226,8 @@ copy (
     SELECT
         code_postal AS id,
         nom_de_la_commune AS name,
-        geom_value_agg(geom, 6) AS price_estimate,
+        geom_value_agg(geom, 6, 'Maison') AS price_estimate,
+        geom_value_agg(geom, 6, 'Appartement') AS price_estimate_appartement,
         geom
     FROM
         postcode
@@ -230,7 +239,8 @@ CREATE temp TABLE section_prices AS
 SELECT
     s.id,
     s.nom AS name,
-    geom_value_agg(s.geom, 7) AS price_estimate,
+    geom_value_agg(geom, 7, 'Maison') AS price_estimate,
+    geom_value_agg(geom, 7, 'Appartement') AS price_estimate_appartement,
     s.geom
 FROM
     section s;

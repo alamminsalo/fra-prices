@@ -23,11 +23,10 @@ SELECT
     ) AS geom,  -- properties struct
     { 'id': (row_number() over ())::text,
     'name': coalesce(name, ''),
-    'price_estimate': price_estimate::int }::json AS properties,
+    'price_estimate': price_estimate::int,
+    'price_estimate_appartement': price_estimate_appartement::int }::json AS properties,
 FROM
-    st_read(src)
-WHERE
-    NOT isnan(price_estimate);
+    st_read(src);
 
 copy (
     FROM

@@ -41,13 +41,12 @@ export default function Map() {
           map.setFilter("price-highlight", ["==", ["get", "id"], featureId]);
 
           // --- POPUP LOGIC ---
-          const formattedPrice = price
-            ? Math.round(price).toLocaleString('fr-FR') + " €"
-            : "N/A";
+          const price_maison = feature.properties.price_estimate ? Math.round(feature.properties.price_estimate).toLocaleString('fr-FR') + " €" : 'N/A'
+          const price_appartement = feature.properties.price_estimate_appartement ? Math.round(feature.properties.price_estimate_appartement).toLocaleString('fr-FR') + " €" : 'N/A';
 
           popup
             .setLngLat(e.lngLat)
-            .setHTML(`<div>${feature.properties.name}<div class="price-label">${formattedPrice}</div></div>`)
+            .setHTML(`<div>${feature.properties.name}<div class="price-label">Maison: ${price_maison}</div><div class="price-label">Appartement: ${price_appartement}</div></div>`)
             .addTo(map);
 
           map.getCanvas().style.cursor = "pointer";
